@@ -28,7 +28,7 @@ namespace BaiDuOCR.Controllers
         [HttpGet]
         public string Get()
         {
-            return JsonConvert.SerializeObject(Setting);
+            return JsonConvert.SerializeObject(OCRVerify.UseMQ());
         }
 
 
