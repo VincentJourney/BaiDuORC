@@ -49,7 +49,7 @@ namespace BaiDuOCR
 
                         channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                     };
-                    channel.BasicConsume(queue: "queueA",
+                    channel.BasicConsume(queue: "OCR_queue",
                                          autoAck: false,
                                          consumer: consumer);
 
