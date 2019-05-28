@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations.Schema;
 using Dapper.Contrib.Extensions;
 
 namespace BaiDuOCR.Model.Entity
 {
-    [System.ComponentModel.DataAnnotations.Schema.Table("ApplyPictureRecongnize")]
+    [Table("ApplyPictureRecongnize")]
     public class ApplyPictureRecongnize
     {
         [ExplicitKey]

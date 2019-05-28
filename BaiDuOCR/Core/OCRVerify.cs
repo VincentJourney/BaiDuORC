@@ -17,6 +17,9 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using System.Web;
 using RabbitMQ.Client;
+using BaiDuOCR.Request;
+using BaiDuOCR.Attr;
+using BaiDuOCR.Model.Response;
 
 namespace BaiDuOCR.Core
 {
@@ -34,19 +37,16 @@ namespace BaiDuOCR.Core
         /// <param name="mallId"></param>
         /// <param name="base64"></param>
         /// <returns>识别结果</returns>
-        public static async Task<Result> ReceiptOCR(string mallId, string base64)
+        public static async Task<Result> ReceiptOCR(OCRRequest oCRRequest)
         {
-
-            var result = await Task.Run(() =>
-            {
-                var OcrResult = BaiDuReceiptOCR(mallId, base64);
-                if (OcrResult.Success)
-                    return RecognitOCRResult(OcrResult.Data.ToString());
-                else
-                    return OcrResult;
-            });
-            return new Result(false, "", result);
-
+            return await Task.Run(() =>
+             {
+                 var OcrResult = BaiDuReceiptOCR(oCRRequest);
+                 if (OcrResult.Success)
+                     return RecognitOCRResult(OcrResult.Data.ToString());
+                 else
+                     return OcrResult;
+             });
         }
 
         /// <summary>
@@ -55,13 +55,12 @@ namespace BaiDuOCR.Core
         /// <param name="mallId"></param>
         /// <param name="base64"></param>
         /// <returns></returns>
-        private static Result BaiDuReceiptOCR(string mallId, string base64)
+        private static Result BaiDuReceiptOCR(OCRRequest oCRRequest)
         {
             try
             {
-                base64 = System.Web.HttpUtility.UrlEncode(base64);
-                MallOCRRule MallRule = CacheHandle<MallOCRRule>($"MallOCRRule{mallId}", 1, $" and MallID='{mallId}'");
-                var result = HttpHelper.HttpPost(string.Format(MallRule.OCRServerURL, MallRule.OCRServerToken), $"image={HttpUtility.UrlEncode(base64)}");
+                MallOCRRule MallRule = CacheHandle<MallOCRRule>($"MallOCRRule{oCRRequest.mallId}", 1, $" and MallID='{oCRRequest.mallId}'");
+                var result = HttpHelper.HttpPost(string.Format(MallRule.OCRServerURL, MallRule.OCRServerToken), $"image={HttpUtility.UrlEncode(oCRRequest.base64)}");
                 if (result.Contains("error_msg"))
                 {
                     var OCRErrorModel = JsonConvert.DeserializeObject<OCRErrorResult>(result);
@@ -129,38 +128,43 @@ namespace BaiDuOCR.Core
                         if (ReturnResult.Success)
                         {
                             var ReturnData = ReturnResult.Data.ToString();
-                            switch (StoreDetailRule.OCRKeyType) //枚举有注释，根据关键字类型赋值
+                            if (!string.IsNullOrWhiteSpace(ReturnData))
                             {
-                                case (int)OCRKeyType.ReceiptNO:
-                                    if (!string.IsNullOrWhiteSpace(ReturnData) && string.IsNullOrWhiteSpace(ReceiptOCRModel.ReceiptNo))
-                                    {
-                                        ReceiptOCRModel.ReceiptNo = ReturnResult.Data.ToString();
+                                switch (StoreDetailRule.OCRKeyType) //枚举有注释，根据关键字类型赋值
+                                {
+                                    case (int)OCRKeyType.StoreNo: //当规则关键字类型为商铺时 不用校验，因为上面已经校验
                                         continue;
-                                    }
-                                    break;
-                                case (int)OCRKeyType.DateTime:
-                                    if (!string.IsNullOrWhiteSpace(ReturnData) && ReceiptOCRModel.TransDatetime == Commom.DefaultDateTime)
-                                    {
-                                        ReturnData = ReturnData.Replace(" ", "").Insert(10, " ");//可能会识别成 2019 - 05 - 1512:14:44 转datetime 报错
-                                        if (DateTime.TryParse(ReturnData, out var DateTimeResult))
+                                    case (int)OCRKeyType.ReceiptNO:
+                                        if (!string.IsNullOrWhiteSpace(ReturnData) && string.IsNullOrWhiteSpace(ReceiptOCRModel.ReceiptNo))
                                         {
-                                            ReceiptOCRModel.TransDatetime = DateTimeResult;
+                                            ReceiptOCRModel.ReceiptNo = ReturnResult.Data.ToString();
                                             continue;
                                         }
-                                    }
-                                    break;
-                                case (int)OCRKeyType.Amount:
-                                    if (!string.IsNullOrWhiteSpace(ReturnData) && ReceiptOCRModel.TranAmount == 0)
-                                    {
-                                        if (decimal.TryParse(ReturnResult.Data.ToString(), out var AmountResult))
+                                        break;
+                                    case (int)OCRKeyType.DateTime:
+                                        if (!string.IsNullOrWhiteSpace(ReturnData) && ReceiptOCRModel.TransDatetime == Commom.DefaultDateTime)
                                         {
-                                            ReceiptOCRModel.TranAmount = AmountResult;
-                                            continue;
+                                            ReturnData = ReturnData.Replace(" ", "").Insert(10, " ");//可能会识别成 2019 - 05 - 1512:14:44 转datetime 报错
+                                            if (DateTime.TryParse(ReturnData, out var DateTimeResult))
+                                            {
+                                                ReceiptOCRModel.TransDatetime = DateTimeResult;
+                                                continue;
+                                            }
                                         }
-                                    }
-                                    break;
-                                default:
-                                    return new Result(false, $"商铺未设置该关键字类型取值方法：{StoreDetailRule.OCRKeyType}", null);
+                                        break;
+                                    case (int)OCRKeyType.Amount:
+                                        if (!string.IsNullOrWhiteSpace(ReturnData) && ReceiptOCRModel.TranAmount == 0)
+                                        {
+                                            if (decimal.TryParse(ReturnResult.Data.ToString(), out var AmountResult))
+                                            {
+                                                ReceiptOCRModel.TranAmount = AmountResult;
+                                                continue;
+                                            }
+                                        }
+                                        break;
+                                    default:
+                                        return new Result(false, $"商铺未设置该关键字类型取值方法：{StoreDetailRule.OCRKeyType}", null);
+                                }
                             }
                         }
                     }
@@ -172,7 +176,7 @@ namespace BaiDuOCR.Core
                     id = RecongnizeModelId,
                     applyid = Guid.NewGuid(),
                     Lineno = 0,
-                    LineContent = OcrResult,
+                    LineContent = JsonConvert.SerializeObject(WordList),
                     OCRResult = JsonConvert.SerializeObject(ReceiptOCRModel)
                 };
                 var AddResult = DbContext.Add(RecongnizeModel);
@@ -180,7 +184,7 @@ namespace BaiDuOCR.Core
                 if (AddResult == 0)
                     ReceiptOCRModel.RecongnizelId = RecongnizeModelId;
                 else
-                    return new Result(false, "ApplyPictureRecongnize Fail", null);
+                    return new Result(false, "添加到ApplyPictureRecongnize失败", null);
 
                 return new Result(true, "识别成功", ReceiptOCRModel);
             }
@@ -318,17 +322,34 @@ namespace BaiDuOCR.Core
 
         /// <summary>
         /// 创建积分申请单，校验信息成功并推送
+        /// 若原先存在积分申请单，失败的原因：校验失败 所有应该重新赋值
         /// </summary>
         /// <param name="cardId"></param>
         /// <param name="receiptOCR"></param>
         /// <returns></returns>
-        public static async Task<Result> CreateApplyPoint(string cardId, ReceiptOCR receiptOCR)
+        public static async Task<Result> CreateApplyPoint(ApplyPointRequest applyPointRequest)
         {
             try
             {
-                Store StoreModel = CacheHandle<Store>($"Store{receiptOCR.StoreId}", 1, $" and StoreId = '{receiptOCR.StoreId}'");
-                StoreOCR StoreOCRRule = CacheHandle<StoreOCR>($"StoreOCR{receiptOCR.StoreId}", 0.5, $"and StoreId = '{receiptOCR.StoreId}'");
-                var ApplyPoint = dal.GetModel<ApplyPoint>($" and ReceiptNo='{receiptOCR.ReceiptNo}' and StoreID='{receiptOCR.StoreId}'");
+                #region 图片上传
+                ImageResponse ImageResponse = null;
+                try
+                {
+                    var FileUploadResult = ImageUpload(Commom.FileUploadUrl, applyPointRequest.receiptOCR.Base64);
+                    if (!FileUploadResult.Success)
+                        return FileUploadResult;
+                    ImageResponse = JsonConvert.DeserializeObject<ImageResponse>(FileUploadResult.Data.ToString());
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("CreateApplyPoint-FileUpload", ex);
+                    return new Result(false, ex.Message, null);
+                }
+                #endregion
+
+                Store StoreModel = CacheHandle<Store>($"Store{applyPointRequest.receiptOCR.StoreId}", 1, $" and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
+                StoreOCR StoreOCRRule = CacheHandle<StoreOCR>($"StoreOCR{applyPointRequest.receiptOCR.StoreId}", 0.5, $"and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
+                var ApplyPoint = dal.GetModel<ApplyPoint>($" and ReceiptNo='{applyPointRequest.receiptOCR.ReceiptNo}' and StoreID='{applyPointRequest.receiptOCR.StoreId}'");
                 var IsHas = false;// 是否原先存在积分申请单  默认没有
                 if (ApplyPoint == null)  //判断该小票号 是否存在积分申请单 不存在则添加原始积分申请单 （已解析原始数据，校验失败）
                 {
@@ -337,28 +358,31 @@ namespace BaiDuOCR.Core
                     {
                         ApplyPointID = ApplyPointId,
                         MallID = StoreModel.MallID,
-                        StoreID = receiptOCR.StoreId,
-                        CardID = Guid.Parse(cardId),
-                        ReceiptNo = await FileUpload(Commom.FileUploadUrl, receiptOCR.ReceiptNo),
-                        TransDate = receiptOCR.TransDatetime,
-                        TransAmt = receiptOCR.TranAmount,
-                        VerifyStatus = StoreOCRRule.needVerify == 0 ? 1 : 0
+                        StoreID = applyPointRequest.receiptOCR.StoreId,
+                        CardID = Guid.Parse(applyPointRequest.cardId),
+                        ReceiptNo = applyPointRequest.receiptOCR.ReceiptNo,
+                        TransDate = applyPointRequest.receiptOCR.TransDatetime,
+                        TransAmt = applyPointRequest.receiptOCR.TranAmount,
+                        VerifyStatus = StoreOCRRule.needVerify == 0 ? 1 : 0,
+                        ReceiptPhoto = ImageResponse.fileURL
                     };
                 }
                 else
                 {
                     IsHas = true;
                     ApplyPoint.MallID = StoreModel.MallID;
-                    ApplyPoint.StoreID = receiptOCR.StoreId;
-                    ApplyPoint.CardID = Guid.Parse(cardId);
-                    ApplyPoint.ReceiptNo = receiptOCR.ReceiptNo;
-                    ApplyPoint.TransDate = receiptOCR.TransDatetime;
-                    ApplyPoint.TransAmt = receiptOCR.TranAmount;
+                    ApplyPoint.StoreID = applyPointRequest.receiptOCR.StoreId;
+                    ApplyPoint.CardID = Guid.Parse(applyPointRequest.cardId);
+                    ApplyPoint.ReceiptNo = applyPointRequest.receiptOCR.ReceiptNo;
+                    ApplyPoint.TransDate = applyPointRequest.receiptOCR.TransDatetime;
+                    ApplyPoint.TransAmt = applyPointRequest.receiptOCR.TranAmount;
                     ApplyPoint.VerifyStatus = StoreOCRRule.needVerify == 0 ? 1 : 0;
                 }
 
-                var VerifyRecognitionResult = VerifyRecognition(receiptOCR);//校验
+                var VerifyRecognitionResult = VerifyRecognition(applyPointRequest.receiptOCR);//校验
                 ApplyPoint.AuditDate = DateTime.Now;
+
+
                 if (VerifyRecognitionResult.Success)
                 {
                     ApplyPoint.RecongizeStatus = 2;
@@ -376,26 +400,37 @@ namespace BaiDuOCR.Core
                     return VerifyRecognitionResult;
                 }
 
+                var LastRes = true;//添加是否成功 
                 if (IsHas)
-                    DbContext.Update<ApplyPoint>(ApplyPoint);
-                else
-                    DbContext.Add<ApplyPoint>(ApplyPoint);
-
-                //自动积分 推送
-                var arg = new WebPosArg
                 {
-                    companyID = StoreModel.CompanyID.ToString(),
-                    storeID = StoreModel.StoreId.ToString(),
-                    cardID = dal.GetModel<Card>($" and CardID='{cardId}'")?.CardCode ?? "",
-                    cashierID = "CrmApplyPoint",
-                    discountPercentage = 0,
-                    orgID = StoreModel.OrgID.ToString(),
-                    receiptNo = receiptOCR.ReceiptNo,
-                    txnDateTime = receiptOCR.TransDatetime
-                };
-                var posResult = await WebPosForPoint(arg);
+                    if (!DbContext.Update<ApplyPoint>(ApplyPoint))
+                        LastRes = false;
+                }
+                else
+                {
+                    if (DbContext.Add<ApplyPoint>(ApplyPoint) != 0)
+                        LastRes = false;
+                }
 
-                return posResult;
+                if (LastRes)
+                {
+                    //自动积分 推送
+                    var arg = new WebPosArg
+                    {
+                        companyID = StoreModel.CompanyID.ToString(),
+                        storeID = StoreModel.StoreId.ToString(),
+                        cardID = dal.GetModel<Card>($" and CardID='{applyPointRequest.cardId}'")?.CardCode ?? "",
+                        cashierID = "CrmApplyPoint",
+                        discountPercentage = 0,
+                        orgID = StoreModel.OrgID.ToString(),
+                        receiptNo = applyPointRequest.receiptOCR.ReceiptNo,
+                        txnDateTime = applyPointRequest.receiptOCR.TransDatetime
+                    };
+                    var argStr = JsonConvert.SerializeObject(arg);
+                    UseMQ(argStr);
+                    return new Result(true, "校验成功，已申请积分！", null);
+                }
+                return new Result(false, "校验成功，对ApplyPoint操作失败！", null);
             }
             catch (Exception ex)
             {
@@ -462,12 +497,19 @@ namespace BaiDuOCR.Core
         /// <returns></returns>
         private static Result CompareModel<T>(T oldModel, T newModel) where T : class
         {
-            var oldInfo = oldModel.GetType().GetProperties(BindingFlags.Public);
-            var newInfo = newModel.GetType().GetProperties(BindingFlags.Public);
+            var oldInfo = oldModel.GetType().GetProperties();
+            var newInfo = newModel.GetType().GetProperties();
+
+            if (oldInfo.Count() == 0 || newInfo.Count() == 0)
+                return new Result(false, "Entity Data Error", null);
+
             foreach (var item in oldInfo)
             {
+                var attr = (ValidateAttr)item.GetCustomAttribute(typeof(ValidateAttr));
+                if (attr != null && attr.IgnoreKey == item.Name)
+                    continue;
                 var newinfoObj = newInfo.Where(s => s.Name == item.Name).FirstOrDefault();
-                if (newinfoObj != null || newinfoObj.GetValue(newModel, null).ToString().Contains(item.GetValue(oldModel, null).ToString()))
+                if (newinfoObj == null && !item.GetValue(oldModel, null).ToString().Contains(newinfoObj.GetValue(newModel, null).ToString()))
                     return new Result(false, "OCR数据与提交数据不一致", null);
             }
             return new Result(true, "", null);
@@ -510,86 +552,52 @@ namespace BaiDuOCR.Core
             }
         }
 
-
-        public static async Task<string> FileUpload(string url, string base64Str)
+        public static Result ImageUpload(string url, string base64Str)
         {
-            return await Task.Run(() =>
+            try
             {
-                var strImage = string.Empty;
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = "POST";
-                request.ContentType = "application/x-www-form-urlencoded";
-                //request.ReadWriteTimeout = 30 * 1000;
-                ///添加参数  
-                Dictionary<String, String> dicList = new Dictionary<String, String>();
-
-                StringBuilder sb = new StringBuilder();
-                sb.Append("{");
-                sb.Append("\"Shared\": {}");
-                sb.Append(",\"Data\": {\"Picture\": \"" + base64Str + "\"}");
-                sb.Append("}");
-                dicList.Add("request", sb.ToString());
-
-                String postStr = buildQueryStr(dicList);
-                byte[] data = Encoding.UTF8.GetBytes(postStr);
-                request.ContentLength = postStr.Length;
-                Stream myRequestStream = request.GetRequestStream();
-                myRequestStream.Write(data, 0, data.Length);
-                myRequestStream.Close();
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                StreamReader myStreamReader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                string retString = myStreamReader.ReadToEnd();
-                JObject jsonObj = JObject.Parse(retString);
-                //string retString = "{\"Result\":{\"HasError\":false,\"ErrorCode\":1,\"ErrorMessage\":\"\"},\"Data\":null}";
-                if (jsonObj != null)
+                ImageRequest request = new ImageRequest()
                 {
-                    if (jsonObj["Result"]["HasError"].ToString() == "False")
-                    {
-                        strImage = jsonObj["Data"]["FileName"].ToString();
-                    }
-                }
-                myStreamReader.Close();
-                return strImage;
+                    fileName = Guid.NewGuid().ToString(),
+                    base64Str = base64Str,
+                    sourceSystem = "crm-ocr",
+                    fileDescription = "资源上传图片"
+                };
+                var result = HttpHelper.FileUpload(url, JsonConvert.SerializeObject(request));
+                return new Result(true, "", result);
 
-            });
-
-        }
-
-        private static string buildQueryStr(Dictionary<String, String> dicList)
-        {
-            String postStr = "";
-            foreach (var item in dicList)
-            {
-                postStr += item.Key + "=" + WebUtility.UrlEncode(item.Value) + "&";
             }
-            postStr = postStr.Substring(0, postStr.LastIndexOf('&'));
-            return postStr;
+            catch (Exception ex)
+            {
+                Log.Error("ImageUpload", ex);
+                return new Result(false, ex.Message, null);
+            }
         }
 
 
-        public static string UseMQ()
+        public static string UseMQ(string Value)
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
             {
-                using (var channel = connection.CreateModel())
-                {
-                    channel.QueueDeclare(queue: "hello",
-                                   durable: false,
-                                   exclusive: false,
-                                   autoDelete: false,
-                                   arguments: null);
+                channel.QueueDeclare(queue: "apply_queue",
+                                     durable: true,
+                                     exclusive: false,
+                                     autoDelete: false,
+                                     arguments: null);
 
-                    string message = "Hello World!";
-                    var body = Encoding.UTF8.GetBytes(message);
 
-                    channel.BasicPublish(exchange: "",
-                                         routingKey: "hello",
-                                         basicProperties: null,
-                                         body: body);
-                }
+                var properties = channel.CreateBasicProperties();
+                properties.Persistent = true;
+
+                var body = Encoding.UTF8.GetBytes(Value);
+                channel.BasicPublish(exchange: "",
+                                     routingKey: "apply",
+                                     basicProperties: properties,
+                                     body: body);
             }
-            return "Hello World！";
+            return "Hello World!";
         }
     }
 }

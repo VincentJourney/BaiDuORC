@@ -14,7 +14,7 @@ using BaiDuOCR.Core;
 
 namespace BaiDuOCR.Core
 {
-    public static class VerifyRuleBLL
+    public class VerifyRuleBLL
     {
         private static OCRDAL dal = new OCRDAL();
 

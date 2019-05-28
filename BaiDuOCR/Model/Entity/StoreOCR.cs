@@ -37,7 +37,7 @@ namespace BaiDuOCR.Model.Entity
         /// </summary>
         public string POSSID { get; set; }
         /// <summary>
-        /// 是否校验 1 校验，0 不校验
+        /// 是否校验 1 校验，0 不校验   新增
         /// </summary>
         public int needVerify { get; set; }
     }

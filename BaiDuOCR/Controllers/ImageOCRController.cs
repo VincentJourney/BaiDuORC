@@ -9,6 +9,7 @@ using BaiDuOCR.Model.Entity;
 using BaiDuOCR.Core;
 using BaiDuOCR.Model.Util;
 using System.Diagnostics;
+using BaiDuOCR.Request;
 
 namespace BaiDuOCR.Controllers
 {
@@ -28,7 +29,7 @@ namespace BaiDuOCR.Controllers
         [HttpGet]
         public string Get()
         {
-            return JsonConvert.SerializeObject(OCRVerify.UseMQ());
+            return JsonConvert.SerializeObject(OCRVerify.UseMQ("123"));
         }
 
 
@@ -89,55 +90,55 @@ namespace BaiDuOCR.Controllers
         }
 
         //图片识别
-        [HttpPost("OCR")]
-        public async Task<string> RecognitOCRResult(string mallId, string base64)
+        [HttpPost("OCR")]   //测试   mallId 25e4df19-f956-41fe-b935-0fb2af3501b0   
+        public async Task<string> RecognitOCRResult([FromBody]OCRRequest oCRRequest)
         {
             try
             {
+                if (oCRRequest == null)
+                    return new Result(false, "参数错误", null).ToRString();
                 Stopwatch a = new Stopwatch();
                 a.Start();
-                Result result = await OCRVerify.ReceiptOCR(mallId, base64);
-                //if (result.Success)
-                //{
-                //    await WebPosForPoint();
-                //}
+                Result result = await OCRVerify.ReceiptOCR(oCRRequest);
                 a.Stop();
-                //var b = a.Elapsed;
-                return JsonConvert.SerializeObject(result);
+                var b = a.Elapsed;
+                return $"用时：{b}--{result.ToRString()}";
             }
             catch (Exception ex)
             {
                 Log.Error("ReceiptOCR", ex);
-                throw new Exception(ex.Message);
+                return new Result(false, ex.Message, null).ToRString();
             }
         }
 
         //积分申请
         [HttpPost("ApplyPoint")]
-        public async Task<string> ApplyPoint(string cardId, ReceiptOCR receiptOCR)
+        public async Task<string> ApplyPoint([FromBody]ApplyPointRequest applyPointRequest)
         {
             try
             {
+                if (applyPointRequest == null)
+                    return new Result(false, "参数错误", null).ToRString();
                 Stopwatch a = new Stopwatch();
                 a.Start();
-                Result result = await OCRVerify.CreateApplyPoint(cardId, receiptOCR);
+                Result result = await OCRVerify.CreateApplyPoint(applyPointRequest);
                 a.Stop();
                 var b = a.Elapsed;
-                return JsonConvert.SerializeObject(result);
+                return $"用时：{b}--{result.ToRString()}";
             }
             catch (Exception ex)
             {
                 Log.Error("ReceiptOCR", ex);
-                throw new Exception(ex.Message);
+                return new Result(false, ex.Message, null).ToRString();
             }
         }
 
         [HttpPost("TestFileUpLoad")]
-        public async Task<string> TestFileUpLoad([FromBody] string Base64)
+        public Result TestFileUpLoad([FromBody] string Base64)
         {
             var sw = new Stopwatch();
             sw.Start();
-            var result = await OCRVerify.FileUpload("http://10.0.8.6:1848", Base64);
+            var result = OCRVerify.ImageUpload("http://10.0.8.6:1848/api/file/UploadFile", Base64);
             sw.Stop();
             var b = sw.Elapsed;
             return result;
