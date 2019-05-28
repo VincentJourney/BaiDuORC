@@ -29,7 +29,6 @@ namespace BaiDuOCR.Core
 
         private static CacheHelper cacheHelper = new CacheHelper();
 
-
         /// <summary>
         /// 图片识别
         /// </summary>
@@ -77,7 +76,6 @@ namespace BaiDuOCR.Core
                 return new Result(false, ex.Message, null);
             }
         }
-
 
         /// <summary>
         /// 从OCR接口中 根据规则 获取详细内容 （暂无校验）
@@ -269,7 +267,6 @@ namespace BaiDuOCR.Core
             }
         }
 
-
         /// <summary>
         /// 根据信息校验用户是否篡改信息，是否满足商铺积分规则
         /// </summary>
@@ -379,18 +376,15 @@ namespace BaiDuOCR.Core
                     ApplyPoint.VerifyStatus = StoreOCRRule.needVerify == 0 ? 1 : 0;
                 }
 
-                var VerifyRecognitionResult = VerifyRecognition(applyPointRequest.receiptOCR);//校验
+                var VerifyRecognitionResult = VerifyRecognition(applyPointRequest.receiptOCR);//校验结果
                 ApplyPoint.AuditDate = DateTime.Now;
-
-
-                if (VerifyRecognitionResult.Success)
+                if (VerifyRecognitionResult.Success)//校验成功
                 {
                     ApplyPoint.RecongizeStatus = 2;
                     ApplyPoint.VerifyStatus = 1;
                 }
-                else
+                else//校验失败 修改值
                 {
-                    //校验失败 修改值
                     ApplyPoint.RecongizeStatus = 3;
                     ApplyPoint.VerifyStatus = 0;
                     if (IsHas)
@@ -414,20 +408,22 @@ namespace BaiDuOCR.Core
 
                 if (LastRes)
                 {
+                    Company company = CacheHandle<Company>($"Company{StoreModel.StoreId}", 24, $" and CompanyId= '{StoreModel.CompanyID}'");
+                    OrgInfo orgInfo = CacheHandle<OrgInfo>($"OrgInfo{StoreModel.StoreId}", 24, $" and OrgId= '{StoreModel.OrgID}'");
                     //自动积分 推送
                     var arg = new WebPosArg
                     {
-                        companyID = StoreModel.CompanyID.ToString(),
-                        storeID = StoreModel.StoreId.ToString(),
+                        companyID = company.CompanyCode,
+                        storeID = StoreModel.StoreCode,
                         cardID = dal.GetModel<Card>($" and CardID='{applyPointRequest.cardId}'")?.CardCode ?? "",
                         cashierID = "CrmApplyPoint",
                         discountPercentage = 0,
-                        orgID = StoreModel.OrgID.ToString(),
+                        orgID = orgInfo.OrgCode,
                         receiptNo = applyPointRequest.receiptOCR.ReceiptNo,
                         txnDateTime = applyPointRequest.receiptOCR.TransDatetime
                     };
                     var argStr = JsonConvert.SerializeObject(arg);
-                    UseMQ(argStr);
+                    ProducerMQ(argStr);
                     return new Result(true, "校验成功，已申请积分！", null);
                 }
                 return new Result(false, "校验成功，对ApplyPoint操作失败！", null);
@@ -438,7 +434,6 @@ namespace BaiDuOCR.Core
                 return new Result(false, ex.Message, null);
             }
         }
-
 
         /// <summary>
         /// 自动积分并微信推送接口
@@ -485,8 +480,6 @@ namespace BaiDuOCR.Core
 
             }
         }
-
-
 
         /// <summary>
         /// 对比同一类型Model的数据
@@ -552,6 +545,12 @@ namespace BaiDuOCR.Core
             }
         }
 
+        /// <summary>
+        /// 图片上传
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="base64Str"></param>
+        /// <returns></returns>
         public static Result ImageUpload(string url, string base64Str)
         {
             try
@@ -575,7 +574,12 @@ namespace BaiDuOCR.Core
         }
 
 
-        public static string UseMQ(string Value)
+        /// <summary>
+        /// MQ生产者
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        public static string ProducerMQ(string Value)
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
@@ -593,7 +597,7 @@ namespace BaiDuOCR.Core
 
                 var body = Encoding.UTF8.GetBytes(Value);
                 channel.BasicPublish(exchange: "",
-                                     routingKey: "apply",
+                                     routingKey: "apply_queue",
                                      basicProperties: properties,
                                      body: body);
             }
