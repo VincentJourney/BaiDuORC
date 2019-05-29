@@ -54,7 +54,7 @@ namespace BaiDuOCR.Core
         /// <param name="mallId"></param>
         /// <param name="base64"></param>
         /// <returns></returns>
-        private static Result BaiDuReceiptOCR(OCRRequest oCRRequest)
+        public static Result BaiDuReceiptOCR(OCRRequest oCRRequest)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace BaiDuOCR.Core
                                                 //查询所有的商铺规则并缓存
                 List<StoreOCRDetail> AllStoreOCRDetailRuleList = CacheHandle<List<StoreOCRDetail>>(Key: "AllStoreOCRDetailRuleLists", Hour: 24, sqlWhere: "");
                 //所有商铺名称规则
-                var StoreNameRuleList = AllStoreOCRDetailRuleList.Where(s => s.OCRKeyType == (int)OCRKeyType.StoreNo).Select(c => c.OCRKey).ToList();
+                var StoreNameRuleList = AllStoreOCRDetailRuleList.Where(s => s.OCRKeyType == (int)OCRKeyType.StoreName).Select(c => c.OCRKey).ToList();
 
                 var resultStoreName = FindStoreNameFromAllRule(WordList, StoreNameRuleList);//根据所有的店铺名规则匹配出的StoreName
 
@@ -130,7 +130,7 @@ namespace BaiDuOCR.Core
                             {
                                 switch (StoreDetailRule.OCRKeyType) //枚举有注释，根据关键字类型赋值
                                 {
-                                    case (int)OCRKeyType.StoreNo: //当规则关键字类型为商铺时 不用校验，因为上面已经校验
+                                    case (int)OCRKeyType.StoreName:
                                         continue;
                                     case (int)OCRKeyType.ReceiptNO:
                                         if (!string.IsNullOrWhiteSpace(ReturnData) && string.IsNullOrWhiteSpace(ReceiptOCRModel.ReceiptNo))
@@ -347,6 +347,8 @@ namespace BaiDuOCR.Core
                 Store StoreModel = CacheHandle<Store>($"Store{applyPointRequest.receiptOCR.StoreId}", 1, $" and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
                 StoreOCR StoreOCRRule = CacheHandle<StoreOCR>($"StoreOCR{applyPointRequest.receiptOCR.StoreId}", 0.5, $"and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
                 var ApplyPoint = dal.GetModel<ApplyPoint>($" and ReceiptNo='{applyPointRequest.receiptOCR.ReceiptNo}' and StoreID='{applyPointRequest.receiptOCR.StoreId}'");
+
+
                 var IsHas = false;// 是否原先存在积分申请单  默认没有
                 if (ApplyPoint == null)  //判断该小票号 是否存在积分申请单 不存在则添加原始积分申请单 （已解析原始数据，校验失败）
                 {
@@ -387,6 +389,7 @@ namespace BaiDuOCR.Core
                 {
                     ApplyPoint.RecongizeStatus = 3;
                     ApplyPoint.VerifyStatus = 0;
+                    ApplyPoint.Status = 0;
                     if (IsHas)
                         DbContext.Update<ApplyPoint>(ApplyPoint);
                     else

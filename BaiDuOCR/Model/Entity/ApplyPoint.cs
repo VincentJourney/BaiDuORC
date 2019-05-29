@@ -32,6 +32,10 @@ namespace BaiDuOCR.Model.Entity
         /// 小票图片
         /// </summary>
         public string ReceiptPhoto { get; set; } = "";
+
+        /// <summary>
+        /// 0 未审核  1 已审核  2  驳回
+        /// </summary>
         public int Status { get; set; } = 1;
         /// <summary>
         /// 识别状态 0 未识别  1 已解析原始数据  2 成功完成关键字匹配 3 未成功完成关键字匹配
@@ -45,7 +49,7 @@ namespace BaiDuOCR.Model.Entity
         /// <summary>
         /// 审批人
         /// </summary>
-        public Guid Auditor { get; set; } = Guid.NewGuid();
+        public Guid Auditor { get; set; } = Guid.Empty;
         /// <summary>
         /// 审批时间  ： 当SourceType =7时，审批时间为校验完成时间
         /// </summary>

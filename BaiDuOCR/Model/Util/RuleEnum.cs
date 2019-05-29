@@ -13,7 +13,7 @@ namespace BaiDuOCR.Model.Util
         /// <summary>
         /// 商铺编号
         /// </summary>
-        StoreNo = 1,
+        StoreName = 1,
         /// <summary>
         /// 小票号
         /// </summary>
@@ -25,15 +25,8 @@ namespace BaiDuOCR.Model.Util
         /// <summary>
         /// 交易金额
         /// </summary>
-        Amount,
-        /// <summary>
-        /// 交易人数
-        /// </summary>
-        PeopleNum,
-        /// <summary>
-        /// 商铺名称
-        /// </summary>
-        StoreName
+        Amount
+
     }
 
 

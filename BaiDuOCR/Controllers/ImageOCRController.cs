@@ -10,6 +10,8 @@ using BaiDuOCR.Core;
 using BaiDuOCR.Model.Util;
 using System.Diagnostics;
 using BaiDuOCR.Request;
+using BaiDuOCR.FrameWork;
+using System.Web;
 
 namespace BaiDuOCR.Controllers
 {
@@ -89,7 +91,7 @@ namespace BaiDuOCR.Controllers
 
         }
 
-        //图片识别
+        //图片识别获取信息
         [HttpPost("OCR")]
         //测试   
         // {"mallId":"25e4df19-f956-41fe-b935-0fb2af3501b0","base64":""}
@@ -158,6 +160,40 @@ namespace BaiDuOCR.Controllers
             var b = sw.Elapsed;
             return result;
         }
+
+        [HttpGet("GetToken/{appid}/{appsecret}")]
+        public string GetToken(string appid, string appsecret)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            var result = HttpHelper.HttpPost($"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={appid}&client_secret={appsecret}", "");
+            sw.Stop();
+            var b = sw.Elapsed;
+            return result;
+        }
+
+        [HttpPost("TestBaiDuOcr")]
+        public string TestBaiDuOcr([FromBody]string base64)
+        {
+            try
+            {
+                var sw = new Stopwatch();
+                sw.Start();
+                var result = HttpHelper.HttpPost(
+                    $"https://aip.baidubce.com/rest/2.0/ocr/v1/receipt?access_token=24.6957f2f17f6df78d4826da58a1ee772e.2592000.1561689475.282335-16257764", 
+                    $"image={HttpUtility.UrlEncode(base64)}");
+                sw.Stop();
+                var b = sw.Elapsed;
+                return $"用时：{b}--{result}";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+
+
 
 
 

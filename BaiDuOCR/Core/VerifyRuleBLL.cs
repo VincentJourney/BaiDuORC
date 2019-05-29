@@ -195,7 +195,7 @@ namespace BaiDuOCR.Core
                             var ReturnData = ReturnResult.Data.ToString();
                             switch (StoreDetailRule.OCRKeyType) //枚举有注释，根据关键字类型赋值
                             {
-                                case (int)OCRKeyType.StoreNo:
+                                case (int)OCRKeyType.StoreName:
                                     if (!string.IsNullOrWhiteSpace(ReturnData) && string.IsNullOrWhiteSpace(applyPointOCRResult.StoreCode))
                                     {
                                         applyPointOCRResult.StoreCode = dal.GetModel<Store>($" and StoreName like '%{ReturnData}%'")?.StoreCode ?? "";
