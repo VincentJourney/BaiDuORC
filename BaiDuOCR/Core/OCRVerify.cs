@@ -324,7 +324,7 @@ namespace BaiDuOCR.Core
         /// <param name="cardId"></param>
         /// <param name="receiptOCR"></param>
         /// <returns></returns>
-        public static async Task<Result> CreateApplyPoint(ApplyPointRequest applyPointRequest)
+        public static Result CreateApplyPoint(ApplyPointRequest applyPointRequest)
         {
             try
             {

@@ -130,7 +130,7 @@ namespace BaiDuOCR.Controllers
         //	}
         //}
         [HttpPost("ApplyPoint")]
-        public async Task<string> ApplyPoint([FromBody]ApplyPointRequest applyPointRequest)
+        public string ApplyPoint([FromBody]ApplyPointRequest applyPointRequest)
         {
             try
             {
@@ -138,7 +138,7 @@ namespace BaiDuOCR.Controllers
                     return new Result(false, "参数错误", null).ToRString();
                 Stopwatch a = new Stopwatch();
                 a.Start();
-                Result result = await OCRVerify.CreateApplyPoint(applyPointRequest);
+                Result result = OCRVerify.CreateApplyPoint(applyPointRequest);
                 a.Stop();
                 var b = a.Elapsed;
                 return $"用时：{b}--{result.ToRString()}";
@@ -180,7 +180,7 @@ namespace BaiDuOCR.Controllers
                 var sw = new Stopwatch();
                 sw.Start();
                 var result = HttpHelper.HttpPost(
-                    $"https://aip.baidubce.com/rest/2.0/ocr/v1/receipt?access_token=24.6957f2f17f6df78d4826da58a1ee772e.2592000.1561689475.282335-16257764", 
+                    $"https://aip.baidubce.com/rest/2.0/ocr/v1/receipt?access_token=24.6957f2f17f6df78d4826da58a1ee772e.2592000.1561689475.282335-16257764",
                     $"image={HttpUtility.UrlEncode(base64)}");
                 sw.Stop();
                 var b = sw.Elapsed;
