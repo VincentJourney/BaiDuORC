@@ -604,7 +604,12 @@ namespace BaiDuOCR.Core
         /// <returns></returns>
         public static string ProducerMQ(string Value)
         {
-            var factory = new ConnectionFactory() { HostName = "localhost" };
+            var factory = new ConnectionFactory() {
+                HostName = ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:HostName"),
+                Port = int.Parse(ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:Port")),
+                UserName = ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:UserName"),
+                Password= ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:Password"),
+            };
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
