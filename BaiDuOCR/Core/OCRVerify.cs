@@ -30,6 +30,11 @@ namespace BaiDuOCR.Core
         private static CacheHelper cacheHelper = new CacheHelper();
 
         /// <summary>
+        /// 缓存锁  避免并发设置缓存增加DB压力
+        /// </summary>
+        private static readonly Object cacheLocker = new object();
+
+        /// <summary>
         /// 图片识别
         /// </summary>
         /// <param name="cardId"></param>
@@ -58,8 +63,12 @@ namespace BaiDuOCR.Core
         {
             try
             {
-                MallOCRRule MallRule = CacheHandle<MallOCRRule>($"MallOCRRule{oCRRequest.mallId}", 1, $" and MallID='{oCRRequest.mallId}'");
-                var result = HttpHelper.HttpPost(string.Format(MallRule.OCRServerURL, MallRule.OCRServerToken), $"image={HttpUtility.UrlEncode(oCRRequest.base64)}");
+                List<MallOCRRule> MallRuleList = CacheHandle<List<MallOCRRule>>("AllMallOCRRule", 1, "");
+                var MallRuleModel = MallRuleList.Where(s => s.MallID == Guid.Parse(oCRRequest.mallId)).FirstOrDefault();
+                if (MallRuleModel == null)
+                    return new Result(false, "请定义Mall的OCR规则", null);
+
+                var result = HttpHelper.HttpPost(string.Format(MallRuleModel.OCRServerURL, MallRuleModel.OCRServerToken), $"image={HttpUtility.UrlEncode(oCRRequest.base64)}");
                 if (result.Contains("error_msg"))
                 {
                     var OCRErrorModel = JsonConvert.DeserializeObject<OCRErrorResult>(result);
@@ -90,7 +99,7 @@ namespace BaiDuOCR.Core
                 var WordList = OCRResultModel.words_result;//被识别的内容
                 var OCRStoreName = string.Empty;//被识别出来的商铺名称
                                                 //查询所有的商铺规则并缓存
-                List<StoreOCRDetail> AllStoreOCRDetailRuleList = CacheHandle<List<StoreOCRDetail>>(Key: "AllStoreOCRDetailRuleLists", Hour: 24, sqlWhere: "");
+                List<StoreOCRDetail> AllStoreOCRDetailRuleList = CacheHandle<List<StoreOCRDetail>>(Key: "AllStoreOCRDetailRuleLists", Hour: 0.5, sqlWhere: "");
                 //所有商铺名称规则
                 var StoreNameRuleList = AllStoreOCRDetailRuleList.Where(s => s.OCRKeyType == (int)OCRKeyType.StoreName).Select(c => c.OCRKey).ToList();
 
@@ -411,17 +420,17 @@ namespace BaiDuOCR.Core
 
                 if (LastRes)
                 {
-                    Company company = CacheHandle<Company>($"Company{StoreModel.StoreId}", 24, $" and CompanyId= '{StoreModel.CompanyID}'");
-                    OrgInfo orgInfo = CacheHandle<OrgInfo>($"OrgInfo{StoreModel.StoreId}", 24, $" and OrgId= '{StoreModel.OrgID}'");
+                    List<Company> companyList = CacheHandle<List<Company>>("Company", 24, "");
+                    List<OrgInfo> orgList = CacheHandle<List<OrgInfo>>("OrgInfo", 24, "");
                     //自动积分 推送
                     var arg = new WebPosArg
                     {
-                        companyID = company.CompanyCode,
+                        companyID = companyList.Where(s => s.CompanyId == StoreModel.CompanyID).FirstOrDefault()?.CompanyCode ?? "",
                         storeID = StoreModel.StoreCode,
                         cardID = dal.GetModel<Card>($" and CardID='{applyPointRequest.cardId}'")?.CardCode ?? "",
                         cashierID = "CrmApplyPoint",
                         discountPercentage = 0,
-                        orgID = orgInfo.OrgCode,
+                        orgID = orgList.Where(s => s.OrgId == StoreModel.OrgID).FirstOrDefault()?.OrgCode ?? "",
                         receiptNo = applyPointRequest.receiptOCR.ReceiptNo,
                         txnDateTime = applyPointRequest.receiptOCR.TransDatetime
                     };
@@ -513,7 +522,7 @@ namespace BaiDuOCR.Core
         }
 
         /// <summary>
-        /// 若有缓存则从缓存取，如果缓存中没有则查询并放入缓存
+        /// 查询key-value是否存在，不存在则select DB 线程安全
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="Key">缓存键</param>
@@ -531,12 +540,23 @@ namespace BaiDuOCR.Core
                 {
                     if (typeof(T).IsGenericType) //如果T是泛型
                     {
-                        var argType = typeof(T).GenericTypeArguments.FirstOrDefault();//LIST<T> 中T的type
-                        Value = dal.GetType().GetMethod("GetList").MakeGenericMethod(new Type[] { argType }).Invoke(dal, new object[] { sqlWhere }) as T;
+                        lock (cacheLocker)//避免缓存并发
+                        {
+                            if (!cacheHelper.Exists(Key))
+                            {
+                                var argType = typeof(T).GenericTypeArguments.FirstOrDefault();//LIST<T> 中T type
+                                Value = dal.GetType().GetMethod("GetList").MakeGenericMethod(new Type[] { argType }).Invoke(dal, new object[] { sqlWhere }) as T;
+                            }
+                        }
                     }
                     else
-                        Value = dal.GetModel<T>(sqlWhere);
-
+                    {
+                        lock (cacheLocker)
+                        {
+                            if (!cacheHelper.Exists(Key))
+                                Value = dal.GetModel<T>(sqlWhere);
+                        }
+                    }
                     cacheHelper.Set(Key, Value, TimeSpan.FromHours(Hour));
                 }
                 return Value;
