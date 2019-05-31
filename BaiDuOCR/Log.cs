@@ -32,11 +32,7 @@ namespace BaiDuOCR
         {
             if (level >= Level)
             {
-
-                string rootdir = AppContext.BaseDirectory;
-                DirectoryInfo Dir = Directory.GetParent(rootdir);
-                var rootName = Dir.Parent.Parent.Parent.FullName;
-                string root = $"{rootName}/Log/{DateTime.Now.ToString("yyyy-MM-dd")}-logInfo.txt";
+                string root = $"{Directory.GetCurrentDirectory()}/Log/{DateTime.Now.ToString("yyyy-MM-dd")}-logInfo.txt";
                 StreamWriter sw = File.AppendText(root);
                 var loginfo = $@"
 时间:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}

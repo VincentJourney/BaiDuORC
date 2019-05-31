@@ -12,6 +12,7 @@ using System.Diagnostics;
 using BaiDuOCR.Request;
 using BaiDuOCR.FrameWork;
 using System.Web;
+using System.IO;
 
 namespace BaiDuOCR.Controllers
 {
@@ -28,10 +29,11 @@ namespace BaiDuOCR.Controllers
             Setting = option.Value;
         }
 
-        [HttpGet]
+        [HttpGet("rootName")]
         public string Get()
         {
-            return "Hello World!";
+            Log.Warn($"testLog{ConfigurationUtil.GetSection("ObjectConfig:ConnectionString")}", null);
+            return $"{ConfigurationUtil.GetSection("ObjectConfig:ConnectionString")}";
         }
 
 
