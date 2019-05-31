@@ -98,7 +98,7 @@ namespace Core.FrameWork
             return Db.Insert(model);
         }
         /// <summary>
-        /// 增
+        /// 删
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>
@@ -108,7 +108,7 @@ namespace Core.FrameWork
             return Db.Delete(model);
         }
         /// <summary>
-        /// 增
+        /// 改
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="model"></param>

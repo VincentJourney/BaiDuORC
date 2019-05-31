@@ -76,9 +76,7 @@
             <summary>
             图片识别
             </summary>
-            <param name="cardId"></param>
-            <param name="mallId"></param>
-            <param name="base64"></param>
+            <param name="oCRRequest"></param>
             <returns>识别结果</returns>
         </member>
         <member name="M:BaiDuOCR.Core.OCRVerify.BaiDuReceiptOCR(BaiDuOCR.Request.OCRRequest)">
@@ -106,8 +104,7 @@
             创建积分申请单，校验信息成功并推送
             若原先存在积分申请单，失败的原因：校验失败 所有应该重新赋值
             </summary>
-            <param name="cardId"></param>
-            <param name="receiptOCR"></param>
+            <param name="applyPointRequest"></param>
             <returns></returns>
         </member>
         <member name="M:BaiDuOCR.Core.OCRVerify.WebPosForPoint(BaiDuOCR.Model.Entity.WebPosArg)">
@@ -634,7 +631,7 @@
         </member>
         <member name="M:Core.FrameWork.DbContext.Delete``1(``0)">
             <summary>
-            增
+            删
             </summary>
             <typeparam name="T"></typeparam>
             <param name="model"></param>
@@ -642,7 +639,7 @@
         </member>
         <member name="M:Core.FrameWork.DbContext.Update``1(``0)">
             <summary>
-            增
+            改
             </summary>
             <typeparam name="T"></typeparam>
             <param name="model"></param>

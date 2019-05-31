@@ -37,9 +37,7 @@ namespace BaiDuOCR.Core
         /// <summary>
         /// 图片识别
         /// </summary>
-        /// <param name="cardId"></param>
-        /// <param name="mallId"></param>
-        /// <param name="base64"></param>
+        /// <param name="oCRRequest"></param>
         /// <returns>识别结果</returns>
         public static async Task<Result> ReceiptOCR(OCRRequest oCRRequest)
         {
@@ -190,12 +188,12 @@ namespace BaiDuOCR.Core
                 var RecongnizeModel = new ApplyPictureRecongnize
                 {
                     id = RecongnizeModelId,
-                    applyid = Guid.NewGuid(),
+                    applyid = Guid.Empty,
                     Lineno = 0,
                     LineContent = JsonConvert.SerializeObject(WordList),
                     OCRResult = JsonConvert.SerializeObject(ReceiptOCRModel)
                 };
-                var AddResult = DbContext.Add(RecongnizeModel);
+                var AddResult = DbContext.Add(RecongnizeModel);//添加原始数据 applyid 等待积分申请
                 //添加成功后 出参RecongnizeModelId
                 if (AddResult == 0)
                     ReceiptOCRModel.RecongnizelId = RecongnizeModelId;
@@ -340,13 +338,11 @@ namespace BaiDuOCR.Core
 
             return new Result(true, "验证成功", null);
         }
-
         /// <summary>
         /// 创建积分申请单，校验信息成功并推送
         /// 若原先存在积分申请单，失败的原因：校验失败 所有应该重新赋值
         /// </summary>
-        /// <param name="cardId"></param>
-        /// <param name="receiptOCR"></param>
+        /// <param name="applyPointRequest"></param>
         /// <returns></returns>
         public static Result CreateApplyPoint(ApplyPointRequest applyPointRequest)
         {
@@ -380,8 +376,10 @@ namespace BaiDuOCR.Core
 
                 var ApplyPoint = dal.GetModel<ApplyPoint>($" and ReceiptNo='{applyPointRequest.receiptOCR.ReceiptNo}' and StoreID='{applyPointRequest.receiptOCR.StoreId}'");
 
+                ApplyPictureRecongnize applyPictureRecongnize = dal.GetModel<ApplyPictureRecongnize>($" and id='{applyPointRequest.receiptOCR.RecongnizelId}'");
 
-                var IsHas = false;// 是否原先存在积分申请单  默认没有
+
+                var IsHas = false;// 是否原先存在积分申请单  默认没有 更新识别原始表
                 if (ApplyPoint == null)  //判断该小票号 是否存在积分申请单 不存在则添加原始积分申请单 （已解析原始数据，校验失败）
                 {
                     var ApplyPointId = Guid.NewGuid();
@@ -397,6 +395,8 @@ namespace BaiDuOCR.Core
                         VerifyStatus = StoreOCRRule.needVerify == 0 ? 1 : 0,
                         ReceiptPhoto = ImageResponse.fileURL
                     };
+                    applyPictureRecongnize.applyid = ApplyPointId;
+                    DbContext.Update<ApplyPictureRecongnize>(applyPictureRecongnize);
                 }
                 else
                 {
@@ -416,6 +416,7 @@ namespace BaiDuOCR.Core
                 {
                     ApplyPoint.RecongizeStatus = 2;
                     ApplyPoint.VerifyStatus = 1;
+
                 }
                 else//校验失败 修改值
                 {
