@@ -56,16 +56,17 @@ namespace BaiDuOCR.Core
         /// <summary>
         /// 调用百度OCR小票识别服务 返回原始数据
         /// </summary>
-        /// <param name="mallId"></param>
-        /// <param name="base64"></param>
         /// <returns></returns>
         public static Result BaiDuReceiptOCR(OCRRequest oCRRequest)
         {
             try
             {
+                var value = ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:AllMallOCRRule");
+                var hour = double.Parse(value);
+
                 List<MallOCRRule> MallRuleList = CacheHandle<List<MallOCRRule>>(
                    Key: "AllMallOCRRule",
-                   Hour: int.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:AllMallOCRRule")),
+                   Hour: int.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:AllMallOCRRule")),
                    sqlWhere: "");
 
                 var MallRuleModel = MallRuleList.Where(s => s.MallID == Guid.Parse(oCRRequest.mallId)).FirstOrDefault();
@@ -105,7 +106,7 @@ namespace BaiDuOCR.Core
                                                 //查询所有的商铺规则并缓存
                 List<StoreOCRDetail> AllStoreOCRDetailRuleList = CacheHandle<List<StoreOCRDetail>>(
                     Key: "AllStoreOCRDetailRuleList"
-                    , Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:AllStoreOCRDetailRuleList"))
+                    , Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:AllStoreOCRDetailRuleList"))
                     , sqlWhere: "");
 
                 //所有商铺名称规则
@@ -306,7 +307,7 @@ namespace BaiDuOCR.Core
             #region 匹配商铺规则
             StoreOCR StoreOCRRule = CacheHandle<StoreOCR>(
                Key: $"StoreOCR{receiptOCR.StoreId}",
-               Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:StoreOCR")),
+               Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:StoreOCR")),
                sqlWhere: $"and StoreId = '{receiptOCR.StoreId}'");
 
             if (StoreOCRRule.Enabled != 1)
@@ -327,7 +328,7 @@ namespace BaiDuOCR.Core
 
                 Store StoreModel = CacheHandle<Store>(
                     Key: $"Store{receiptOCR.StoreId}",
-                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:Store")),
+                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:Store")),
                     sqlWhere: $" and StoreId = '{receiptOCR.StoreId}'");
 
                 if ((StoreModel.IsStandardPOS == "1" ? 0 : 1) != StoreOCRRule.POSType)
@@ -369,12 +370,12 @@ namespace BaiDuOCR.Core
 
                 Store StoreModel = CacheHandle<Store>(
                     Key: $"Store{applyPointRequest.receiptOCR.StoreId}",
-                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:Store")),
+                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:Store")),
                     sqlWhere: $" and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
 
                 StoreOCR StoreOCRRule = CacheHandle<StoreOCR>(
                     Key: $"StoreOCR{applyPointRequest.receiptOCR.StoreId}",
-                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:StoreOCR")),
+                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:StoreOCR")),
                     sqlWhere: $"and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
 
                 var ApplyPoint = dal.GetModel<ApplyPoint>($" and ReceiptNo='{applyPointRequest.receiptOCR.ReceiptNo}' and StoreID='{applyPointRequest.receiptOCR.StoreId}'");
@@ -444,11 +445,11 @@ namespace BaiDuOCR.Core
                 {
                     List<Company> companyList = CacheHandle<List<Company>>(
                         Key: "Company",
-                        Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:Company")),
+                        Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:Company")),
                         sqlWhere: "");
                     List<OrgInfo> orgList = CacheHandle<List<OrgInfo>>(
                         Key: "OrgInfo",
-                        Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:OrgInfo")),
+                        Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig:CacheExpiration:OrgInfo")),
                         sqlWhere: "");
 
                     //自动积分 推送

@@ -4,6 +4,20 @@
         <name>BaiDuOCR</name>
     </assembly>
     <members>
+        <member name="M:BaiDuOCR.Controllers.ImageOCRController.RecognitOCRResult(BaiDuOCR.Request.OCRRequest)">
+            <summary>
+            图片识别  {"mallId":"25e4df19-f956-41fe-b935-0fb2af3501b0","base64":""}
+            </summary>
+            <param name="oCRRequest"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Controllers.ImageOCRController.ApplyPoint(BaiDuOCR.Request.ApplyPointRequest)">
+            <summary>
+            积分申请
+            </summary>
+            <param name="applyPointRequest"></param>
+            <returns></returns>
+        </member>
         <member name="M:BaiDuOCR.Core.Commom.GeneralOCRBasic(System.Func{Baidu.Aip.Ocr.Ocr,Newtonsoft.Json.Linq.JObject})">
             <summary>
             调用通用文字识别
@@ -71,8 +85,6 @@
             <summary>
             调用百度OCR小票识别服务 返回原始数据
             </summary>
-            <param name="mallId"></param>
-            <param name="base64"></param>
             <returns></returns>
         </member>
         <member name="M:BaiDuOCR.Core.OCRVerify.RecognitOCRResult(System.String)">
