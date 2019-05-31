@@ -1,0 +1,640 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BaiDuOCR</name>
+    </assembly>
+    <members>
+        <member name="M:BaiDuOCR.Core.Commom.GeneralOCRBasic(System.Func{Baidu.Aip.Ocr.Ocr,Newtonsoft.Json.Linq.JObject})">
+            <summary>
+            调用通用文字识别
+            </summary>
+            <param name="FileName"></param>
+            <returns>OCRResult</returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.Commom.ImgToBase64String(System.Drawing.Bitmap)">
+            <summary>
+            Bitmap => Base64
+            </summary>
+            <param name="bmp"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.Commom.DeleteFile">
+            <summary>
+            主动清理   
+            暂时测试  
+            提高性能可将数组拆分为多个线程进行删除
+            </summary>
+            <param name="fileDirect"></param>
+            <param name="saveDay"></param>
+        </member>
+        <member name="M:BaiDuOCR.Core.Commom.GetImage(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            压缩图片
+            </summary>
+            <param name="name">需要压缩的原图</param>
+            <param name="width">压缩后的宽度</param>
+            <param name="xDpi">分辨率</param>
+            <param name="yDpi">分辨率</param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRDAL.GetModel``1(System.String)">
+            <summary>
+            Model
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="whereStr"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRDAL.GetList``1(System.String)">
+            <summary>
+            List
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="whereStr"></param>
+            <returns></returns>
+        </member>
+        <member name="F:BaiDuOCR.Core.OCRVerify.cacheLocker">
+            <summary>
+            缓存锁  避免并发设置缓存增加DB压力
+            </summary>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.ReceiptOCR(BaiDuOCR.Request.OCRRequest)">
+            <summary>
+            图片识别
+            </summary>
+            <param name="cardId"></param>
+            <param name="mallId"></param>
+            <param name="base64"></param>
+            <returns>识别结果</returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.BaiDuReceiptOCR(BaiDuOCR.Request.OCRRequest)">
+            <summary>
+            调用百度OCR小票识别服务 返回原始数据
+            </summary>
+            <param name="mallId"></param>
+            <param name="base64"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.RecognitOCRResult(System.String)">
+            <summary>
+            从OCR接口中 根据规则 获取详细内容 （暂无校验）
+            </summary>
+            <param name="OcrResult"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.VerifyRecognition(BaiDuOCR.Model.Entity.ReceiptOCR)">
+            <summary>
+            根据信息校验用户是否篡改信息，是否满足商铺积分规则
+            </summary>
+            <param name="receiptOCR"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.CreateApplyPoint(BaiDuOCR.Request.ApplyPointRequest)">
+            <summary>
+            创建积分申请单，校验信息成功并推送
+            若原先存在积分申请单，失败的原因：校验失败 所有应该重新赋值
+            </summary>
+            <param name="cardId"></param>
+            <param name="receiptOCR"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.WebPosForPoint(BaiDuOCR.Model.Entity.WebPosArg)">
+            <summary>
+            自动积分并微信推送接口
+            </summary>
+            <param name="webPosArg"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.CompareModel``1(``0,``0)">
+            <summary>
+            对比同一类型Model的数据
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="oldModel"></param>
+            <param name="newModel"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.CacheHandle``1(System.String,System.Double,System.String)">
+            <summary>
+            查询key-value是否存在，不存在则select DB 线程安全
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="Key">缓存键</param>
+            <param name="Hour">缓存有效时长</param>
+            <param name="sqlWhere"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.ImageUpload(System.String,System.String)">
+            <summary>
+            图片上传
+            </summary>
+            <param name="url"></param>
+            <param name="base64Str"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.OCRVerify.ProducerMQ(System.String)">
+            <summary>
+            MQ生产者
+            </summary>
+            <param name="Value"></param>
+            <returns></returns>
+        </member>
+        <member name="F:BaiDuOCR.Core.VerifyRuleBLL.DefaultDateTime">
+            <summary>
+            默认最小时间
+            </summary>
+        </member>
+        <member name="M:BaiDuOCR.Core.VerifyRuleBLL.GetApplyPointOCRResult(System.Guid,System.Guid,System.String)">
+            <summary>
+            根据商铺规则明细取到内容
+            </summary>
+            <param name="ApplyId">积分申请单ID</param>
+            <param name="StoreId">商铺Id</param>
+            <param name="OCRResult">OCR识别原始数据</param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.VerifyRuleBLL.VerifyOCRResult(BaiDuOCR.Model.Entity.ApplyPointOCRResult)">
+            <summary>
+            小票OCR结果匹配商铺自动积分规则
+            </summary>
+            <param name="OCRResult"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.VerifyRuleBLL.WebPosForPoint(BaiDuOCR.Model.Entity.WebPosArg)">
+            <summary>
+            自动积分并微信推送接口
+            </summary>
+            <param name="webPosArg"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BaiDuOCR.Core.VerifyRuleBLL.CacheHandle``1(System.String,System.Double,System.String)">
+            <summary>
+            若有缓存则从缓存取，如果缓存中没有则查询并放入缓存
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="Key">缓存键</param>
+            <param name="Hour">缓存有效时长</param>
+            <param name="sqlWhere"></param>
+            <returns></returns>
+        </member>
+        <!-- 对于成员“M:BaiDuOCR.FrameWork.HttpHelper.HttpPost(System.String,System.String)”忽略有格式错误的 XML 注释 -->
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.ReceiptNo">
+            <summary>
+            小票号
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.TransDate">
+            <summary>
+            交易日期
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.TransAmt">
+            <summary>
+            交易金额
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.ReceiptPhoto">
+            <summary>
+            小票图片
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.Status">
+            <summary>
+            0 未审核  1 已审核  2  驳回
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.RecongizeStatus">
+            <summary>
+            识别状态 0 未识别  1 已解析原始数据  2 成功完成关键字匹配 3 未成功完成关键字匹配
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.VerifyStatus">
+            <summary>
+            校验状态 0 校验失败 1 校验成功
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.Auditor">
+            <summary>
+            审批人
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.AuditDate">
+            <summary>
+            审批时间  ： 当SourceType =7时，审批时间为校验完成时间
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.SourceType">
+            <summary>
+            来源类型 添加类型7=OCR引擎
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.RewardCyclelogID">
+            <summary>
+            激励日志Id
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPoint.TransID">
+            <summary>
+            交易ID
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPointOCRResult.Status">
+            <summary>
+            识别标记 0 未识别 1 部分识别 2 全部识别
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPointOCRResult.needVerify">
+            <summary>
+            是否需要校验 0 不需要 1 需要 （根据店铺自动积分规则
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ApplyPointOCRResult.VerifyStatus">
+            <summary>
+            校验标记 0 未校验 1 完成校验
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.ruleid">
+            <summary>
+             主键 规则Id
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.MallID">
+            <summary>
+             广场Id
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.POSServeURL">
+            <summary>
+            服务器地址
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.POSServerUser">
+            <summary>
+            校验用户名
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.POSServerPassword">
+            <summary>
+            用户密码
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.POSServerToken">
+            <summary>
+            服务Token
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.OCRServerURL">
+            <summary>
+            OCR服务地址
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.OCRServerAccess">
+            <summary>
+            OCR服务地址
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.MallOCRRule.OCRServerToken">
+            <summary>
+            OCR服务访问信息
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.ReceiptOCR.RecongnizelId">
+            <summary>
+            识别原始表Id
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.Store.IsStandardPOS">
+            <summary>
+            是否为非标POS 1为标准 
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCR.MinValidReceiptValue">
+            <summary>
+            最小合法小票金额
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCR.MaxValidReceiptValue">
+            <summary>
+            最大合法小票金额
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCR.MaxTicketPerDay">
+            <summary>
+            日自动交易笔数 每日最大自动积分记录，0代表不限制
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCR.Enabled">
+            <summary>
+            启动自动积分  0 不启动 1 启动
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCR.POSType">
+            <summary>
+            POS类型  0 租用POS 1 非标POS
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCR.POSSID">
+            <summary>
+            POS门店代码 记录标准POS在POS系统中的交易代码用于检验
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCR.needVerify">
+            <summary>
+            是否校验 1 校验，0 不校验   新增
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCRDetail.RuleDetailId">
+            <summary>
+            规则明细ID
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCRDetail.StoreId">
+            <summary>
+            门店ID
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCRDetail.OCRKeyType">
+            <summary>
+            关键字类型  1 StoreNo 2 ReceiptNO 3 DateTime 4 Amount 5 就餐人数
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCRDetail.OCRKey">
+            <summary>
+            关键字 例如相关关键字的统配检查
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCRDetail.GetValueWay">
+            <summary>
+            取值方法 1 关键字 2 关键字后 3 隔行
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCRDetail.SkipLines">
+            <summary>
+            隔行数量  可以为0 1代表下一行取数
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Entity.StoreOCRDetail.GetValueRule">
+            <summary>
+            取值规则 写成公式模板，可以取左，取右或者取中间，包括取值长度
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Util.ObjectConfig.ConnectionString">
+            <summary>
+            数据库连接
+            </summary>
+        </member>
+        <member name="T:BaiDuOCR.Model.Util.BaiDuSetting">
+            <summary>
+            百度API的配置项
+            </summary>
+        </member>
+        <member name="T:BaiDuOCR.Model.Util.CleanFilesInfo">
+            <summary>
+            清理文件配置项
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Util.CleanFilesInfo.Folder">
+            <summary>
+            需清理的文件夹
+            </summary>
+        </member>
+        <member name="P:BaiDuOCR.Model.Util.CleanFilesInfo.SaveDay">
+            <summary>
+            文件保存的月份
+            </summary>
+        </member>
+        <member name="T:BaiDuOCR.Model.Util.OCRKeyType">
+            <summary>
+            关键字类型
+            </summary>
+        </member>
+        <member name="F:BaiDuOCR.Model.Util.OCRKeyType.StoreName">
+            <summary>
+            商铺编号
+            </summary>
+        </member>
+        <member name="F:BaiDuOCR.Model.Util.OCRKeyType.ReceiptNO">
+            <summary>
+            小票号
+            </summary>
+        </member>
+        <member name="F:BaiDuOCR.Model.Util.OCRKeyType.DateTime">
+            <summary>
+            交易时间
+            </summary>
+        </member>
+        <member name="F:BaiDuOCR.Model.Util.OCRKeyType.Amount">
+            <summary>
+            交易金额
+            </summary>
+        </member>
+        <member name="T:BaiDuOCR.Model.Util.GetValueWay">
+            <summary>
+            取值方法
+            </summary>
+        </member>
+        <member name="F:BaiDuOCR.Model.Util.GetValueWay.OCRKey">
+            <summary>
+            关键字
+            </summary>
+        </member>
+        <member name="F:BaiDuOCR.Model.Util.GetValueWay.AfterOCRKey">
+            <summary>
+            关键字后
+            </summary>
+        </member>
+        <member name="F:BaiDuOCR.Model.Util.GetValueWay.NextLine">
+            <summary>
+            隔行
+            </summary>
+        </member>
+        <member name="T:WebPosTest.WebPOSCredentials">
+            <remarks/>
+        </member>
+        <member name="P:WebPosTest.WebPOSCredentials.Username">
+            <remarks/>
+        </member>
+        <member name="P:WebPosTest.WebPOSCredentials.Password">
+            <remarks/>
+        </member>
+        <member name="T:WebPos.WebPOSCredentials">
+            <remarks/>
+        </member>
+        <member name="P:WebPos.WebPOSCredentials.Username">
+            <remarks/>
+        </member>
+        <member name="P:WebPos.WebPOSCredentials.Password">
+            <remarks/>
+        </member>
+        <member name="T:Core.FrameWork.CacheHelper">
+            <summary>
+            缓存
+            </summary>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.Exists(System.String)">
+            <summary>
+            验证缓存项是否存在
+            </summary>
+            <param name="key">缓存Key</param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.Set(System.String,System.Object,System.TimeSpan,System.TimeSpan)">
+            <summary>
+            添加缓存
+            </summary>
+            <param name="key">缓存Key</param>
+            <param name="value">缓存Value</param>
+            <param name="expiresSliding">滑动过期时长（如果在过期时间内有操作，则以当前时间点延长过期时间）</param>
+            <param name="expiressAbsoulte">绝对过期时长</param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.Set(System.String,System.Object,System.TimeSpan,System.Boolean)">
+            <summary>
+            添加缓存
+            </summary>
+            <param name="key">缓存Key</param>
+            <param name="value">缓存Value</param>
+            <param name="expiresIn">缓存时长</param>
+            <param name="isSliding">是否滑动过期（如果在过期时间内有操作，则以当前时间点延长过期时间）</param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.Remove(System.String)">
+            <summary>
+            删除缓存
+            </summary>
+            <param name="key">缓存Key</param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.RemoveAll(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            批量删除缓存
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.Get``1(System.String)">
+            <summary>
+            获取缓存
+            </summary>
+            <param name="key">缓存Key</param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.Get(System.String)">
+            <summary>
+            获取缓存
+            </summary>
+            <param name="key">缓存Key</param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.GetAll(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            获取缓存集合
+            </summary>
+            <param name="keys">缓存Key集合</param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.RemoveCacheAll">
+            <summary>
+            删除所有缓存
+            </summary>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.RemoveCacheRegex(System.String)">
+            <summary>
+            删除匹配到的缓存
+            </summary>
+            <param name="pattern"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.SearchCacheRegex(System.String)">
+            <summary>
+            搜索 匹配到的缓存
+            </summary>
+            <param name="pattern"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.CacheHelper.GetCacheKeys">
+            <summary>
+            获取所有缓存键
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DapperHelper.#ctor">
+            <summary>
+            私有构造方法，使外界不能创建该类的实例，以便实现单例模式
+            </summary>
+        </member>
+        <member name="F:Core.FrameWork.DapperHelper._connection">
+            数据库连接名
+        </member>
+        <member name="P:Core.FrameWork.DapperHelper.Connection">
+            获取连接名        
+        </member>
+        <member name="F:Core.FrameWork.DapperHelper.dbConnection">
+            返回连接实例        
+        </member>
+        <member name="F:Core.FrameWork.DapperHelper.uniqueInstance">
+            静态变量保存类的实例        
+        </member>
+        <member name="F:Core.FrameWork.DapperHelper.locker">
+            定义一个标识确保线程同步        
+        </member>
+        <member name="M:Core.FrameWork.DapperHelper.GetInstance">
+            <summary>
+            获取实例，这里为单例模式，保证只存在一个实例
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DapperHelper.OpenCurrentDbConnection">
+            <summary>
+            创建数据库连接对象并打开链接
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DbContext.QueryFirstOrDefault``1(System.String,System.Object)">
+            <summary>
+            查出一条记录的实体
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="sql"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DbContext.Query``1(System.String,System.Object,System.Data.IDbTransaction,System.Boolean,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType})">
+            <summary>
+            查出多条记录的实体泛型集合
+            </summary>
+            <typeparam name="T">泛型T</typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DbContext.QueryMultiple(System.String,System.Object,System.Data.IDbTransaction,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType})">
+            <summary>
+            同时查询多张表数据（高级查询）
+            "select *from K_City;select *from K_Area";
+            </summary>
+            <param name="sql"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DbContext.Add``1(``0)">
+            <summary>
+            增
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DbContext.Delete``1(``0)">
+            <summary>
+            增
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Core.FrameWork.DbContext.Update``1(``0)">
+            <summary>
+            增
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

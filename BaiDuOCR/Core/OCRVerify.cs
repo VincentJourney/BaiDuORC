@@ -63,7 +63,11 @@ namespace BaiDuOCR.Core
         {
             try
             {
-                List<MallOCRRule> MallRuleList = CacheHandle<List<MallOCRRule>>("AllMallOCRRule", 1, "");
+                List<MallOCRRule> MallRuleList = CacheHandle<List<MallOCRRule>>(
+                   Key: "AllMallOCRRule",
+                   Hour: int.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:AllMallOCRRule")),
+                   sqlWhere: "");
+
                 var MallRuleModel = MallRuleList.Where(s => s.MallID == Guid.Parse(oCRRequest.mallId)).FirstOrDefault();
                 if (MallRuleModel == null)
                     return new Result(false, "请定义Mall的OCR规则", null);
@@ -99,7 +103,11 @@ namespace BaiDuOCR.Core
                 var WordList = OCRResultModel.words_result;//被识别的内容
                 var OCRStoreName = string.Empty;//被识别出来的商铺名称
                                                 //查询所有的商铺规则并缓存
-                List<StoreOCRDetail> AllStoreOCRDetailRuleList = CacheHandle<List<StoreOCRDetail>>(Key: "AllStoreOCRDetailRuleLists", Hour: 0.5, sqlWhere: "");
+                List<StoreOCRDetail> AllStoreOCRDetailRuleList = CacheHandle<List<StoreOCRDetail>>(
+                    Key: "AllStoreOCRDetailRuleList"
+                    , Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:AllStoreOCRDetailRuleList"))
+                    , sqlWhere: "");
+
                 //所有商铺名称规则
                 var StoreNameRuleList = AllStoreOCRDetailRuleList.Where(s => s.OCRKeyType == (int)OCRKeyType.StoreName).Select(c => c.OCRKey).ToList();
 
@@ -296,7 +304,10 @@ namespace BaiDuOCR.Core
             #endregion
 
             #region 匹配商铺规则
-            StoreOCR StoreOCRRule = CacheHandle<StoreOCR>($"StoreOCR{receiptOCR.StoreId}", 0.5, $"and StoreId = '{receiptOCR.StoreId}'");
+            StoreOCR StoreOCRRule = CacheHandle<StoreOCR>(
+               Key: $"StoreOCR{receiptOCR.StoreId}",
+               Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:StoreOCR")),
+               sqlWhere: $"and StoreId = '{receiptOCR.StoreId}'");
 
             if (StoreOCRRule.Enabled != 1)
                 return new Result(false, "商铺未启用自动积分", null);
@@ -314,7 +325,10 @@ namespace BaiDuOCR.Core
                         return new Result(false, "今日已超过最大自动积分记录数量", null);
                 }
 
-                Store StoreModel = CacheHandle<Store>($"Store{receiptOCR.StoreId}", 1, $" and StoreId = '{receiptOCR.StoreId}'");
+                Store StoreModel = CacheHandle<Store>(
+                    Key: $"Store{receiptOCR.StoreId}",
+                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:Store")),
+                    sqlWhere: $" and StoreId = '{receiptOCR.StoreId}'");
 
                 if ((StoreModel.IsStandardPOS == "1" ? 0 : 1) != StoreOCRRule.POSType)
                     return new Result(false, "OCR商铺POS类型不一致", null);
@@ -353,8 +367,16 @@ namespace BaiDuOCR.Core
                 }
                 #endregion
 
-                Store StoreModel = CacheHandle<Store>($"Store{applyPointRequest.receiptOCR.StoreId}", 1, $" and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
-                StoreOCR StoreOCRRule = CacheHandle<StoreOCR>($"StoreOCR{applyPointRequest.receiptOCR.StoreId}", 0.5, $"and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
+                Store StoreModel = CacheHandle<Store>(
+                    Key: $"Store{applyPointRequest.receiptOCR.StoreId}",
+                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:Store")),
+                    sqlWhere: $" and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
+
+                StoreOCR StoreOCRRule = CacheHandle<StoreOCR>(
+                    Key: $"StoreOCR{applyPointRequest.receiptOCR.StoreId}",
+                    Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:StoreOCR")),
+                    sqlWhere: $"and StoreId = '{applyPointRequest.receiptOCR.StoreId}'");
+
                 var ApplyPoint = dal.GetModel<ApplyPoint>($" and ReceiptNo='{applyPointRequest.receiptOCR.ReceiptNo}' and StoreID='{applyPointRequest.receiptOCR.StoreId}'");
 
 
@@ -420,8 +442,15 @@ namespace BaiDuOCR.Core
 
                 if (LastRes)
                 {
-                    List<Company> companyList = CacheHandle<List<Company>>("Company", 24, "");
-                    List<OrgInfo> orgList = CacheHandle<List<OrgInfo>>("OrgInfo", 24, "");
+                    List<Company> companyList = CacheHandle<List<Company>>(
+                        Key: "Company",
+                        Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:Company")),
+                        sqlWhere: "");
+                    List<OrgInfo> orgList = CacheHandle<List<OrgInfo>>(
+                        Key: "OrgInfo",
+                        Hour: double.Parse(ConfigurationUtil.GetSection("ObjectConfig: CacheExpiration:OrgInfo")),
+                        sqlWhere: "");
+
                     //自动积分 推送
                     var arg = new WebPosArg
                     {
@@ -604,11 +633,12 @@ namespace BaiDuOCR.Core
         /// <returns></returns>
         public static string ProducerMQ(string Value)
         {
-            var factory = new ConnectionFactory() {
+            var factory = new ConnectionFactory()
+            {
                 HostName = ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:HostName"),
                 Port = int.Parse(ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:Port")),
                 UserName = ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:UserName"),
-                Password= ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:Password"),
+                Password = ConfigurationUtil.GetSection("ObjectConfig:RabbitMqConfig:Password"),
             };
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
