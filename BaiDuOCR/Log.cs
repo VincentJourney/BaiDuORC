@@ -37,7 +37,7 @@ namespace BaiDuOCR
                 var loginfo = $@"
 时间:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}
 类型:{level}
-基本信息:{message}
+基本信息:{message} 
 基本信息:{JsonConvert.SerializeObject(ex)}";
                 sw.WriteLine(loginfo);
                 sw.Close();
